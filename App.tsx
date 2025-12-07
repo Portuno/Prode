@@ -11,7 +11,8 @@ import {
   clearProde,
   mockSimulateResults,
   calculateGroupStandings,
-  generateKnockoutMatches
+  generateKnockoutMatches,
+  BRACKET_MAP
 } from './utils';
 import MatchCard from './components/MatchCard';
 import ShareView from './components/ShareView';
@@ -89,20 +90,20 @@ function App() {
                    const stageMatches = currentTree.filter(m => m.stage === stage);
                    stageMatches.forEach(match => {
                        const winnerId = saved.bracket ? saved.bracket[match.id] : undefined;
-                       const winnerTeam = winnerId ? teamsById[winnerId] : undefined;
                        
-                       if (winnerTeam && match.nextMatchId) {
-                           // Update next match
-                           currentTree = currentTree.map(nextMatch => {
-                               if (nextMatch.id === match.nextMatchId) {
-                                   if (nextMatch.homeTeam.id === 'mex') {
-                                       return { ...nextMatch, homeTeam: winnerTeam };
-                                   } else if (nextMatch.awayTeam.id === 'mex') {
-                                       return { ...nextMatch, awayTeam: winnerTeam };
+                       if (winnerId && BRACKET_MAP[match.id]) {
+                           const targetMap = BRACKET_MAP[match.id];
+                           const winnerTeam = teamsById[winnerId];
+
+                           if (winnerTeam) {
+                               currentTree = currentTree.map(targetMatch => {
+                                   if (targetMatch.id === targetMap.nextId) {
+                                       if (targetMap.slot === 'home') return { ...targetMatch, homeTeam: winnerTeam };
+                                       if (targetMap.slot === 'away') return { ...targetMatch, awayTeam: winnerTeam };
                                    }
-                               }
-                               return nextMatch;
-                           });
+                                   return targetMatch;
+                               });
+                           }
                        }
                    });
               });
@@ -115,7 +116,8 @@ function App() {
           // SMART RESUME LOGIC
           // Determine where to send the user based on how much data they have
           const hasChampion = saved.bracket && saved.bracket['m64'];
-          const hasGroupPredictions = Object.keys(saved.predictions).length > 10; // Approx check
+          // A rough check if they have predictions for all group matches (approx 72 matches in group stage)
+          const hasGroupPredictions = Object.keys(saved.predictions).length > 70; 
           
           if (hasChampion) {
               setViewState(ViewState.DASHBOARD);
@@ -162,11 +164,11 @@ function App() {
   };
 
   const handlePredictionChange = (matchId: string, home: number | '', away: number | '') => {
-    const newPredictions = {
-      ...predictions,
+    // USE FUNCTIONAL UPDATE TO PREVENT STATE OVERWRITE IN LOOPS
+    setPredictions(prev => ({
+      ...prev,
       [matchId]: { matchId, homeScore: home, awayScore: away }
-    };
-    setPredictions(newPredictions);
+    }));
   };
 
   // --- STAGE 2: GROUPS COMPLETE ---
@@ -196,18 +198,14 @@ function App() {
       // 1. Update selection
       setBracket(prev => ({ ...prev, [matchId]: winnerId }));
 
-      // 2. Propagate to next match
-      if (nextMatchId) {
+      // 2. Propagate to next match using strict BRACKET_MAP
+      if (BRACKET_MAP[matchId]) {
+          const mapping = BRACKET_MAP[matchId];
           setMatches(prev => prev.map(m => {
-              if (m.id === nextMatchId) {
+              if (m.id === mapping.nextId) {
                   const winnerTeam = teamsById[winnerId];
-                  // Simple fill logic for interaction phase
-                  if (m.homeTeam.id === 'mex' && m.awayTeam.id === 'mex') {
-                       return { ...m, homeTeam: winnerTeam };
-                  } else if (m.homeTeam.id !== 'mex' && m.awayTeam.id === 'mex') {
-                       return { ...m, awayTeam: winnerTeam };
-                  }
-                  return m;
+                  if (mapping.slot === 'home') return { ...m, homeTeam: winnerTeam };
+                  if (mapping.slot === 'away') return { ...m, awayTeam: winnerTeam };
               }
               return m;
           }));
@@ -224,7 +222,7 @@ function App() {
           };
           saveProde(finalProde);
           setCurrentUser(finalProde);
-          setViewState(ViewState.SHARE);
+          setViewState(ViewState.DASHBOARD); // GO TO TRACKER
       }
   };
 

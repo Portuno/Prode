@@ -7,8 +7,8 @@ const POINTS_EXACT = 5;
 const POINTS_RESULT = 3;
 const POINTS_FAIL = 0;
 
-// VERSIONED STORAGE KEY TO FIX CACHING ISSUES
-const STORAGE_KEY = 'prode_2026_v4_store';
+// VERSIONED STORAGE KEY TO FIX CACHING ISSUES - BUMPED TO V5
+const STORAGE_KEY = 'prode_2026_v5_store';
 
 export const generateUniqueId = (country: string): string => {
   const cleanCountry = country.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
@@ -251,4 +251,46 @@ export const generateKnockoutMatches = (standings: Record<string, GroupStats[]>,
     ];
 
     return [...r32Matches, ...r16Matches, ...qfMatches, ...sfMatches, ...finalMatch];
+};
+
+// Bracket Propagation Map
+// Where does the winner of Match X go?
+export const BRACKET_MAP: Record<string, { nextId: string, slot: 'home' | 'away' }> = {
+    // R32 -> R16
+    'm33': { nextId: 'm49', slot: 'home' },
+    'm34': { nextId: 'm49', slot: 'away' },
+    'm35': { nextId: 'm50', slot: 'home' },
+    'm36': { nextId: 'm50', slot: 'away' },
+    'm37': { nextId: 'm51', slot: 'home' },
+    'm38': { nextId: 'm51', slot: 'away' },
+    'm39': { nextId: 'm52', slot: 'home' },
+    'm40': { nextId: 'm52', slot: 'away' },
+    'm41': { nextId: 'm53', slot: 'home' },
+    'm42': { nextId: 'm53', slot: 'away' },
+    'm43': { nextId: 'm54', slot: 'home' },
+    'm44': { nextId: 'm54', slot: 'away' },
+    'm45': { nextId: 'm55', slot: 'home' },
+    'm46': { nextId: 'm55', slot: 'away' },
+    'm47': { nextId: 'm56', slot: 'home' },
+    'm48': { nextId: 'm56', slot: 'away' },
+
+    // R16 -> QF
+    'm49': { nextId: 'm57', slot: 'home' },
+    'm50': { nextId: 'm57', slot: 'away' },
+    'm51': { nextId: 'm58', slot: 'home' },
+    'm52': { nextId: 'm58', slot: 'away' },
+    'm53': { nextId: 'm59', slot: 'home' },
+    'm54': { nextId: 'm59', slot: 'away' },
+    'm55': { nextId: 'm60', slot: 'home' },
+    'm56': { nextId: 'm60', slot: 'away' },
+
+    // QF -> SF
+    'm57': { nextId: 'm61', slot: 'home' },
+    'm58': { nextId: 'm61', slot: 'away' },
+    'm59': { nextId: 'm62', slot: 'home' },
+    'm60': { nextId: 'm62', slot: 'away' },
+
+    // SF -> Final
+    'm61': { nextId: 'm64', slot: 'home' },
+    'm62': { nextId: 'm64', slot: 'away' },
 };

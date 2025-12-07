@@ -50,6 +50,11 @@ const GroupPredictor: React.FC<GroupPredictorProps> = ({ matches, predictions, o
         const away = Math.floor(Math.random() * 4);
         onPredict(m.id, home, away);
     });
+
+    // Auto advance after short delay for better UX flow in testing
+    setTimeout(() => {
+        handleNext();
+    }, 300);
   };
 
   const progress = ((currentGroupIndex) / GROUPS.length) * 100;
@@ -70,8 +75,8 @@ const GroupPredictor: React.FC<GroupPredictorProps> = ({ matches, predictions, o
            {/* DEV BUTTON: Random Select */}
             <button 
                 onClick={handleRandomFill}
-                className="absolute top-0 right-0 bg-purple-600 text-white px-3 py-1 rounded-full shadow-lg text-xs font-bold hover:bg-purple-500"
-                title="Auto-fill Randomly (Testing)"
+                className="absolute top-0 right-0 bg-purple-600 text-white px-3 py-1 rounded-full shadow-lg z-50 text-xs font-bold hover:bg-purple-500"
+                title="Auto-fill Randomly & Next"
             >
                 ⚡ Random
             </button>
