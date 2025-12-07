@@ -175,7 +175,7 @@ export const generateKnockoutMatches = (standings: Record<string, GroupStats[]>,
     const bestThirds = thirds.slice(0, 8);
     // Helper to get team or placeholder
     const get3rd = (index: number) => {
-        if (bestThirds[index]) return allTeamsMap[bestThirds[index].teamId];
+        if (bestThirds[index]) return allTeamsMap[bestThirds[index].teamId] || TEAMS.MEX;
         return TEAMS.MEX; // Fallback
     };
 

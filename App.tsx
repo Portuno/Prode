@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Match, MatchStage, Prediction, UserProde, Team, BracketSelection } from './types';
-import { INITIAL_MATCHES, TEAMS } from './constants';
+import { INITIAL_MATCHES, TEAMS, CANDIDATE_TEAMS } from './constants';
 import { 
   generateUniqueId, 
   calculatePoints, 
@@ -37,6 +37,14 @@ function App() {
   const [viewState, setViewState] = useState<ViewState>(ViewState.ONBOARDING);
   const [activeStage, setActiveStage] = useState<MatchStage>(MatchStage.GROUP);
   
+  // Create a map of ALL potential teams indexed by their lowercase ID
+  const teamsById = useMemo(() => {
+    const map: Record<string, Team> = {};
+    Object.values(TEAMS).forEach(t => map[t.id] = t);
+    Object.values(CANDIDATE_TEAMS).forEach(t => map[t.id] = t);
+    return map;
+  }, []);
+
   // Helper to swap placeholders with real teams based on user selection
   const resolveMatchesWithPlayoffs = (baseMatches: Match[], resolutions: Record<string, Team>): Match[] => {
       return baseMatches.map(match => {
@@ -64,9 +72,8 @@ function App() {
           // Re-generate Bracket Matches if predictions exist
           if (Object.keys(saved.predictions).length > 0) {
               const standings = calculateGroupStandings(resolvedMatches, saved.predictions);
-              // Need a map of all teams to look up by ID
-              const allTeamsMap: Record<string, Team> = { ...TEAMS, ...saved.playoffResolutions };
-              const knockoutMatches = generateKnockoutMatches(standings, allTeamsMap);
+              
+              const knockoutMatches = generateKnockoutMatches(standings, teamsById);
               
               // Restore bracket state to matches
               // We need to apply the 'bracket' winners to the next matches in the tree
@@ -91,7 +98,7 @@ function App() {
     } else {
       setViewState(ViewState.ONBOARDING);
     }
-  }, []);
+  }, [teamsById]);
 
   // --- STAGE 1: ONBOARDING COMPLETE ---
   const handleOnboardingComplete = (data: { name: string; country: string; club: string; resolutions: Record<string, Team> }) => {
@@ -130,8 +137,7 @@ function App() {
       const standings = calculateGroupStandings(matches, predictions);
       
       // 2. Generate R32 Bracket
-      const allTeamsMap: Record<string, Team> = { ...TEAMS, ...(currentUser?.playoffResolutions || {}) };
-      const knockoutMatches = generateKnockoutMatches(standings, allTeamsMap);
+      const knockoutMatches = generateKnockoutMatches(standings, teamsById);
       
       // 3. Update State
       setMatches(prev => [...prev.filter(m => m.stage === MatchStage.GROUP), ...knockoutMatches]);
@@ -164,8 +170,7 @@ function App() {
                   // but we actually need to update the `matches` state so the next round renders the correct team flag.
                   
                   // Find the team object
-                  const allTeamsMap: Record<string, Team> = { ...TEAMS, ...(currentUser?.playoffResolutions || {}) };
-                  const winnerTeam = allTeamsMap[winnerId];
+                  const winnerTeam = teamsById[winnerId];
                   
                   // If home is placeholder/same-as-prev-round-placeholder, replace home. Else away.
                   // This is fragile. Let's try:
