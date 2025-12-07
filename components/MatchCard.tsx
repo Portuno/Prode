@@ -13,95 +13,103 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, prediction, onPredict, res
   const homeScore = prediction?.homeScore ?? '';
   const awayScore = prediction?.awayScore ?? '';
 
-  const getBorderColor = () => {
-    if (!result || result.status === 'PENDIENTE') return 'border-gray-200';
-    if (result.status === 'EXACTO') return 'border-emerald-500 ring-2 ring-emerald-200';
-    if (result.status === 'GANADOR') return 'border-blue-400';
-    return 'border-red-300';
+  const getStatusColor = () => {
+    if (!result || result.status === 'PENDIENTE') return 'border-transparent';
+    if (result.status === 'EXACTO') return 'border-l-4 border-l-emerald-500 bg-emerald-50/50';
+    if (result.status === 'GANADOR') return 'border-l-4 border-l-blue-500 bg-blue-50/50';
+    return 'border-l-4 border-l-red-400 bg-red-50/50';
   };
 
-  const getStatusBadge = () => {
+  const PointsBadge = () => {
     if (!result || result.status === 'PENDIENTE') return null;
     const colors = {
-      'EXACTO': 'bg-emerald-100 text-emerald-800',
-      'GANADOR': 'bg-blue-100 text-blue-800',
-      'FALLO': 'bg-red-100 text-red-800',
+      'EXACTO': 'bg-emerald-500 text-white shadow-emerald-200',
+      'GANADOR': 'bg-blue-500 text-white shadow-blue-200',
+      'FALLO': 'bg-red-500 text-white shadow-red-200',
       'PENDIENTE': ''
     };
     return (
-      <span className={`absolute -top-3 right-4 px-2 py-0.5 rounded-full text-xs font-bold shadow-sm ${colors[result.status]}`}>
-        {result.status === 'EXACTO' ? '+5 PTS' : result.status === 'GANADOR' ? '+3 PTS' : '0 PTS'}
-      </span>
+      <div className={`absolute -right-2 -top-2 w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold shadow-md z-10 ${colors[result.status]}`}>
+        {result.points}
+      </div>
     );
   };
 
   return (
-    <div className={`relative bg-white rounded-xl shadow-sm border p-4 mb-4 transition-all duration-200 ${getBorderColor()}`}>
-      {getStatusBadge()}
+    <div className={`relative bg-white border-b border-gray-100 last:border-0 p-3 md:p-4 transition-all ${getStatusColor()}`}>
+      {/* Paper line effect */}
       
-      {/* Date & Group info */}
-      <div className="flex justify-between items-center mb-3 text-xs text-gray-400 font-medium uppercase tracking-wider">
-        <span>{match.stage} {match.group ? `• G${match.group}` : ''}</span>
-        <span>{match.date.split(' ')[0]}</span>
+      <div className="flex justify-between items-center mb-2">
+         <span className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">
+            {match.date}
+         </span>
+         {match.stadium && (
+            <span className="text-[10px] md:text-xs text-gray-400 truncate max-w-[120px]">
+                {match.stadium}
+            </span>
+         )}
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        {/* Home Team */}
-        <div className="flex-1 flex flex-col items-center gap-1">
-          <span className="text-4xl filter drop-shadow-sm grayscale-[0.2] transition-all hover:grayscale-0 transform hover:scale-110 cursor-default" title={match.homeTeam.name}>
-            {match.homeTeam.flag}
-          </span>
-          <span className="font-bold text-gray-800 text-sm md:text-base text-center leading-tight">
-            {match.homeTeam.code}
-          </span>
-        </div>
+      <div className="flex items-center gap-3">
+        {/* Teams and Inputs */}
+        <div className="flex-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 md:gap-4">
+            
+            {/* Home */}
+            <div className="flex items-center justify-end gap-2 md:gap-3 text-right">
+                <span className="font-bold text-slate-800 text-sm md:text-base leading-tight uppercase hidden md:block">
+                    {match.homeTeam.name}
+                </span>
+                <span className="font-bold text-slate-800 text-sm md:text-base leading-tight uppercase md:hidden">
+                    {match.homeTeam.code}
+                </span>
+                <span className="text-2xl md:text-3xl">{match.homeTeam.flag}</span>
+            </div>
 
-        {/* Inputs Area */}
-        <div className="flex items-center justify-center gap-2 md:gap-4">
-          <input
-            type="number"
-            min="0"
-            max="20"
-            disabled={readOnly || match.finished}
-            value={homeScore}
-            onChange={(e) => onPredict(match.id, e.target.value === '' ? '' : parseInt(e.target.value), awayScore)}
-            className="w-12 h-12 md:w-14 md:h-14 text-center text-2xl md:text-3xl font-bold rounded-lg border-2 border-gray-100 bg-gray-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 outline-none transition-all score-font disabled:opacity-60 disabled:bg-gray-100"
-            placeholder="-"
-          />
-          
-          <span className="text-gray-300 font-bold text-xl select-none">:</span>
-          
-          <input
-            type="number"
-            min="0"
-            max="20"
-            disabled={readOnly || match.finished}
-            value={awayScore}
-            onChange={(e) => onPredict(match.id, homeScore, e.target.value === '' ? '' : parseInt(e.target.value))}
-            className="w-12 h-12 md:w-14 md:h-14 text-center text-2xl md:text-3xl font-bold rounded-lg border-2 border-gray-100 bg-gray-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 outline-none transition-all score-font disabled:opacity-60 disabled:bg-gray-100"
-            placeholder="-"
-          />
-        </div>
+            {/* Score Inputs */}
+            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
+                <input
+                    type="tel"
+                    maxLength={2}
+                    disabled={readOnly || match.finished}
+                    value={homeScore}
+                    onChange={(e) => onPredict(match.id, e.target.value === '' ? '' : parseInt(e.target.value), awayScore)}
+                    className="w-10 h-10 md:w-12 md:h-12 text-center text-xl md:text-2xl font-bold bg-white rounded shadow-sm focus:ring-2 focus:ring-blue-500 outline-none score-font placeholder-gray-200 text-slate-900 disabled:opacity-80 disabled:bg-gray-50"
+                    placeholder="-"
+                />
+                <span className="text-gray-300 font-bold px-1">-</span>
+                <input
+                    type="tel"
+                    maxLength={2}
+                    disabled={readOnly || match.finished}
+                    value={awayScore}
+                    onChange={(e) => onPredict(match.id, homeScore, e.target.value === '' ? '' : parseInt(e.target.value))}
+                    className="w-10 h-10 md:w-12 md:h-12 text-center text-xl md:text-2xl font-bold bg-white rounded shadow-sm focus:ring-2 focus:ring-blue-500 outline-none score-font placeholder-gray-200 text-slate-900 disabled:opacity-80 disabled:bg-gray-50"
+                    placeholder="-"
+                />
+            </div>
 
-        {/* Away Team */}
-        <div className="flex-1 flex flex-col items-center gap-1">
-          <span className="text-4xl filter drop-shadow-sm grayscale-[0.2] transition-all hover:grayscale-0 transform hover:scale-110 cursor-default" title={match.awayTeam.name}>
-            {match.awayTeam.flag}
-          </span>
-          <span className="font-bold text-gray-800 text-sm md:text-base text-center leading-tight">
-            {match.awayTeam.code}
-          </span>
+            {/* Away */}
+            <div className="flex items-center justify-start gap-2 md:gap-3 text-left">
+                <span className="text-2xl md:text-3xl">{match.awayTeam.flag}</span>
+                <span className="font-bold text-slate-800 text-sm md:text-base leading-tight uppercase hidden md:block">
+                    {match.awayTeam.name}
+                </span>
+                <span className="font-bold text-slate-800 text-sm md:text-base leading-tight uppercase md:hidden">
+                    {match.awayTeam.code}
+                </span>
+            </div>
         </div>
       </div>
 
-      {/* Official Score Display (if finished) */}
+      <PointsBadge />
+
+      {/* Actual Result Display */}
       {match.finished && match.officialHomeScore !== undefined && (
-        <div className="mt-3 pt-3 border-t border-dashed border-gray-100 flex justify-center items-center gap-2 text-xs text-gray-500">
-          <span className="uppercase tracking-widest font-semibold">Resultado Final:</span>
-          <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">
-            {match.officialHomeScore} - {match.officialAwayScore}
-          </span>
-        </div>
+          <div className="flex justify-center mt-2">
+            <span className="bg-slate-800 text-white text-[10px] px-2 py-0.5 rounded-full font-mono tracking-wider opacity-80">
+                FINAL: {match.officialHomeScore} - {match.officialAwayScore}
+            </span>
+          </div>
       )}
     </div>
   );

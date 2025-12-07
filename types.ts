@@ -6,7 +6,8 @@ export type Team = {
 };
 
 export enum MatchStage {
-  GROUP = 'Grupos',
+  GROUP = 'Fase de Grupos',
+  R32 = '16vos',
   R16 = 'Octavos',
   QF = 'Cuartos',
   SF = 'Semis',

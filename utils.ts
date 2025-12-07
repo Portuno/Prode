@@ -1,4 +1,4 @@
-import { Match, Prediction, ScoreResult, UserProde } from './types';
+import { Match, Prediction, ScoreResult, UserProde, MatchStage } from './types';
 
 // Points System
 const POINTS_EXACT = 5;
@@ -8,12 +8,13 @@ const POINTS_FAIL = 0;
 export const generateUniqueId = (country: string): string => {
   const cleanCountry = country.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
   const randomHash = Math.random().toString(36).substring(2, 6).toUpperCase();
-  const yearHash = Math.floor(Math.random() * 9000) + 1000;
-  return `PRODE-${cleanCountry}-${yearHash}-${randomHash}`;
+  // Fixed year hash to 2026 as per request, combined with randomness
+  const secureRandom = window.crypto.getRandomValues(new Uint32Array(1))[0] % 10000;
+  return `PRODE-${cleanCountry}-2026-${randomHash}`;
 };
 
-export const calculatePoints = (prediction: Prediction, match: Match): ScoreResult => {
-  if (!match.finished || match.officialHomeScore === undefined || match.officialAwayScore === undefined) {
+export const calculatePoints = (prediction: Prediction | undefined, match: Match): ScoreResult => {
+  if (!prediction || !match.finished || match.officialHomeScore === undefined || match.officialAwayScore === undefined) {
     return { matchId: match.id, points: 0, status: 'PENDIENTE' };
   }
 
@@ -21,6 +22,10 @@ export const calculatePoints = (prediction: Prediction, match: Match): ScoreResu
   const predAway = Number(prediction.awayScore);
   const realHome = match.officialHomeScore;
   const realAway = match.officialAwayScore;
+
+  if (isNaN(predHome) || isNaN(predAway)) {
+     return { matchId: match.id, points: 0, status: 'PENDIENTE' };
+  }
 
   // 1. Exact Match
   if (predHome === realHome && predAway === realAway) {
@@ -45,7 +50,6 @@ export const calculatePoints = (prediction: Prediction, match: Match): ScoreResu
 export const getTotalScore = (predictions: Record<string, Prediction>, matches: Match[]): number => {
   return matches.reduce((total, match) => {
     const pred = predictions[match.id];
-    if (!pred) return total;
     return total + calculatePoints(pred, match).points;
   }, 0);
 };
@@ -63,8 +67,8 @@ export const loadProde = (): UserProde | null => {
 export const mockSimulateResults = (matches: Match[]): Match[] => {
   return matches.map(m => {
     if (m.finished) return m;
-    // 30% chance a match has finished "just now" for demo purposes, or force all if strictly testing
-    const hasFinished = Math.random() > 0.3; 
+    // 10% chance a match has finished "just now" for demo purposes
+    const hasFinished = Math.random() > 0.8; 
     if (hasFinished) {
       return {
         ...m,
@@ -75,4 +79,22 @@ export const mockSimulateResults = (matches: Match[]): Match[] => {
     }
     return m;
   });
+};
+
+// For comparison demo: Generate a fake "Friend" prode
+export const generateMockFriendProde = (matches: Match[], friendId: string): UserProde => {
+    const predictions: Record<string, Prediction> = {};
+    matches.forEach(m => {
+        predictions[m.id] = {
+            matchId: m.id,
+            homeScore: Math.floor(Math.random() * 3),
+            awayScore: Math.floor(Math.random() * 3)
+        };
+    });
+    return {
+        userId: friendId,
+        countryCode: 'BRA',
+        predictions,
+        createdAt: Date.now()
+    };
 };
