@@ -95,6 +95,7 @@ export const generateMockFriendProde = (matches: Match[], friendId: string): Use
         userId: friendId,
         countryCode: 'BRA',
         predictions,
+        playoffResolutions: {},
         createdAt: Date.now()
     };
 };

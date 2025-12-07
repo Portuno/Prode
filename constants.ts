@@ -1,5 +1,5 @@
 
-import { Match, MatchStage, Team } from './types';
+import { Match, MatchStage, Team, PlayoffGroup } from './types';
 
 export const TEAMS: Record<string, Team> = {
   // Group A
@@ -74,6 +74,52 @@ export const TEAMS: Record<string, Team> = {
   GHA: { id: 'gha', name: 'Ghana', flag: '🇬🇭', code: 'GHA', flagCode: 'gh' },
   PAN: { id: 'pan', name: 'Panamá', flag: '🇵🇦', code: 'PAN', flagCode: 'pa' },
 };
+
+// Playoff Candidate Teams
+export const CANDIDATE_TEAMS: Record<string, Team> = {
+  // EUR A: CZE/DEN/MKD/IRL
+  CZE: { id: 'cze', name: 'Rep. Checa', flag: '🇨🇿', code: 'CZE', flagCode: 'cz' },
+  DEN: { id: 'den', name: 'Dinamarca', flag: '🇩🇰', code: 'DEN', flagCode: 'dk' },
+  MKD: { id: 'mkd', name: 'Macedonia N.', flag: '🇲🇰', code: 'MKD', flagCode: 'mk' },
+  IRL: { id: 'irl', name: 'Rep. Irlanda', flag: '🇮🇪', code: 'IRL', flagCode: 'ie' },
+
+  // EUR B: ITA/BIH/WAL/NIR
+  ITA: { id: 'ita', name: 'Italia', flag: '🇮🇹', code: 'ITA', flagCode: 'it' },
+  BIH: { id: 'bih', name: 'Bosnia y H.', flag: '🇧🇦', code: 'BIH', flagCode: 'ba' },
+  WAL: { id: 'wal', name: 'Gales', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', code: 'WAL', flagCode: 'gb-wls' },
+  NIR: { id: 'nir', name: 'Irlanda del N.', flag: '🏴󠁧󠁢󠁮aen󠁿', code: 'NIR', flagCode: 'gb-nir' },
+
+  // EUR C: TUR/ROU/SVK/KOS
+  TUR: { id: 'tur', name: 'Turquía', flag: '🇹🇷', code: 'TUR', flagCode: 'tr' },
+  ROU: { id: 'rou', name: 'Rumania', flag: '🇷🇴', code: 'ROU', flagCode: 'ro' },
+  SVK: { id: 'svk', name: 'Eslovaquia', flag: '🇸🇰', code: 'SVK', flagCode: 'sk' },
+  KOS: { id: 'kos', name: 'Kosovo', flag: '🇽🇰', code: 'KOS', flagCode: 'xk' },
+
+  // EUR D: UKR/SWE/POL/ALB
+  UKR: { id: 'ukr', name: 'Ucrania', flag: '🇺🇦', code: 'UKR', flagCode: 'ua' },
+  SWE: { id: 'swe', name: 'Suecia', flag: '🇸🇪', code: 'SWE', flagCode: 'se' },
+  POL: { id: 'pol', name: 'Polonia', flag: '🇵🇱', code: 'POL', flagCode: 'pl' },
+  ALB: { id: 'alb', name: 'Albania', flag: '🇦🇱', code: 'ALB', flagCode: 'al' },
+
+  // IPO A: IRQ/BOL/SUR
+  IRQ: { id: 'irq', name: 'Irak', flag: '🇮🇶', code: 'IRQ', flagCode: 'iq' },
+  BOL: { id: 'bol', name: 'Bolivia', flag: '🇧🇴', code: 'BOL', flagCode: 'bo' },
+  SUR: { id: 'sur', name: 'Surinam', flag: '🇸🇷', code: 'SUR', flagCode: 'sr' },
+
+  // IPO B: COD/JAM/NCL
+  COD: { id: 'cod', name: 'RD Congo', flag: '🇨🇩', code: 'COD', flagCode: 'cd' },
+  JAM: { id: 'jam', name: 'Jamaica', flag: '🇯🇲', code: 'JAM', flagCode: 'jm' },
+  NCL: { id: 'ncl', name: 'N. Caledonia', flag: '🇳🇨', code: 'NCL', flagCode: 'nc' },
+};
+
+export const PLAYOFF_GROUPS: PlayoffGroup[] = [
+  { id: 'eur_a', name: 'Repechaje UEFA A', candidates: [CANDIDATE_TEAMS.CZE, CANDIDATE_TEAMS.DEN, CANDIDATE_TEAMS.MKD, CANDIDATE_TEAMS.IRL] },
+  { id: 'eur_b', name: 'Repechaje UEFA B', candidates: [CANDIDATE_TEAMS.ITA, CANDIDATE_TEAMS.BIH, CANDIDATE_TEAMS.WAL, CANDIDATE_TEAMS.NIR] },
+  { id: 'eur_c', name: 'Repechaje UEFA C', candidates: [CANDIDATE_TEAMS.TUR, CANDIDATE_TEAMS.ROU, CANDIDATE_TEAMS.SVK, CANDIDATE_TEAMS.KOS] },
+  { id: 'eur_d', name: 'Repechaje UEFA D', candidates: [CANDIDATE_TEAMS.UKR, CANDIDATE_TEAMS.SWE, CANDIDATE_TEAMS.POL, CANDIDATE_TEAMS.ALB] },
+  { id: 'ipo_a', name: 'Repechaje Inter. A', candidates: [CANDIDATE_TEAMS.BOL, CANDIDATE_TEAMS.IRQ, CANDIDATE_TEAMS.SUR] },
+  { id: 'ipo_b', name: 'Repechaje Inter. B', candidates: [CANDIDATE_TEAMS.COD, CANDIDATE_TEAMS.JAM, CANDIDATE_TEAMS.NCL] },
+];
 
 export const INITIAL_MATCHES: Match[] = [
   // --- GRUPO A ---

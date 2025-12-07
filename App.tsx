@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Match, MatchStage, Prediction, UserProde } from './types';
+import { Match, MatchStage, Prediction, UserProde, Team } from './types';
 import { INITIAL_MATCHES } from './constants';
 import { 
   generateUniqueId, 
@@ -12,9 +13,10 @@ import {
 import MatchCard from './components/MatchCard';
 import ShareView from './components/ShareView';
 import CompareView from './components/CompareView';
-import AIModal from './components/AIModal';
+import Onboarding from './components/Onboarding';
 
 enum ViewState {
+  ONBOARDING = 'ONBOARDING',
   EDITING = 'EDITING',
   DASHBOARD = 'DASHBOARD',
   SHARE = 'SHARE',
@@ -25,19 +27,72 @@ function App() {
   const [matches, setMatches] = useState<Match[]>(INITIAL_MATCHES);
   const [predictions, setPredictions] = useState<Record<string, Prediction>>({});
   const [currentUser, setCurrentUser] = useState<UserProde | null>(null);
-  const [viewState, setViewState] = useState<ViewState>(ViewState.EDITING);
+  const [viewState, setViewState] = useState<ViewState>(ViewState.ONBOARDING);
   const [activeStage, setActiveStage] = useState<MatchStage>(MatchStage.GROUP);
   
-  const [aiModalMatch, setAiModalMatch] = useState<Match | null>(null);
+  // Helper to swap placeholders with real teams based on user selection
+  const resolveMatchesWithPlayoffs = (baseMatches: Match[], resolutions: Record<string, Team>): Match[] => {
+      return baseMatches.map(match => {
+          let newHome = match.homeTeam;
+          let newAway = match.awayTeam;
+
+          // Check if home team is a placeholder that needs resolution
+          if (resolutions[match.homeTeam.id]) {
+              newHome = resolutions[match.homeTeam.id];
+          }
+          // Check if away team is a placeholder
+          if (resolutions[match.awayTeam.id]) {
+              newAway = resolutions[match.awayTeam.id];
+          }
+
+          return { ...match, homeTeam: newHome, awayTeam: newAway };
+      });
+  };
 
   useEffect(() => {
     const saved = loadProde();
     if (saved) {
       setCurrentUser(saved);
       setPredictions(saved.predictions);
+      
+      // If we have saved resolutions, apply them to the initial match list
+      if (saved.playoffResolutions) {
+          const resolvedMatches = resolveMatchesWithPlayoffs(INITIAL_MATCHES, saved.playoffResolutions);
+          setMatches(resolvedMatches);
+      }
+      
       setViewState(ViewState.DASHBOARD);
+    } else {
+      // No saved data, start onboarding
+      setViewState(ViewState.ONBOARDING);
     }
   }, []);
+
+  const handleOnboardingComplete = (data: { name: string; country: string; club: string; resolutions: Record<string, Team> }) => {
+      const userId = generateUniqueId(data.country);
+      
+      // Update matches with the selected teams
+      const resolvedMatches = resolveMatchesWithPlayoffs(INITIAL_MATCHES, data.resolutions);
+      setMatches(resolvedMatches);
+
+      // Create initial user profile
+      const newProde: UserProde = {
+          userId,
+          userName: data.name,
+          countryCode: data.country,
+          club: data.club,
+          predictions: {},
+          playoffResolutions: data.resolutions,
+          createdAt: Date.now()
+      };
+
+      setCurrentUser(newProde);
+      // We don't save to localStorage yet, wait until they click "Save Prode" with predictions? 
+      // Actually, UX-wise it's better to save the identity now so they don't lose the onboarding.
+      saveProde(newProde);
+      
+      setViewState(ViewState.EDITING);
+  };
 
   // Sort matches by date then by group
   const visibleMatches = useMemo<Match[]>(() => {
@@ -71,18 +126,15 @@ function App() {
       return;
     }
 
-    const userId = currentUser ? currentUser.userId : generateUniqueId('ARG');
-    
-    const newProde: UserProde = {
-      userId,
-      countryCode: 'ARG',
-      predictions,
-      createdAt: Date.now()
-    };
-
-    saveProde(newProde);
-    setCurrentUser(newProde);
-    setViewState(ViewState.SHARE);
+    if (currentUser) {
+        const updatedProde: UserProde = {
+            ...currentUser,
+            predictions: predictions,
+        };
+        saveProde(updatedProde);
+        setCurrentUser(updatedProde);
+        setViewState(ViewState.SHARE);
+    }
   };
 
   const toggleLiveSimulation = useCallback(() => {
@@ -92,62 +144,57 @@ function App() {
 
   const totalPoints = currentUser ? getTotalScore(currentUser.predictions, matches) : 0;
 
-  const openAiForMatch = (match: Match) => {
-    setAiModalMatch(match);
-  };
-
-  const applyAiPrediction = (home: number, away: number) => {
-    if (aiModalMatch) {
-      handlePredictionChange(aiModalMatch.id, home, away);
-      setAiModalMatch(null);
-    }
-  };
-
   return (
-    // UPDATED: Removed bg-[#0a0a0a], added pattern-pitch for green background
     <div className="min-h-screen pattern-pitch font-sans text-gray-100 pb-32 selection:bg-[#1E90FF] selection:text-white">
       
-      {/* Header */}
-      <header className="bg-[#004d40] sticky top-0 z-40 border-b border-[#00332a] shadow-xl">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black italic tracking-tighter uppercase leading-none text-white drop-shadow-md">
-                Prode<span className="text-[#FFD700]">2026</span>
-            </h1>
-          </div>
-          
-          {viewState === ViewState.DASHBOARD && (
-             <div className="flex items-center gap-3">
-               <div className="text-right">
-                  <span className="text-[10px] text-white/80 uppercase font-bold tracking-widest block">Tu Puntaje</span>
-                  <span className="text-3xl font-black text-[#FFD700] leading-none score-font drop-shadow-md">{totalPoints}</span>
-               </div>
-               <span className="text-2xl">🏆</span>
-             </div>
-          )}
-        </div>
+      {viewState === ViewState.ONBOARDING && (
+          <Onboarding onComplete={handleOnboardingComplete} />
+      )}
 
-        {/* Navigation Tabs */}
-        {(viewState === ViewState.EDITING || viewState === ViewState.DASHBOARD) && (
-          <div className="flex overflow-x-auto no-scrollbar border-t border-[#00332a] bg-[#1a1a1a]">
-            {Object.values(MatchStage).map((stage) => (
-              <button
-                key={stage}
-                onClick={() => setActiveStage(stage)}
-                className={`flex-shrink-0 px-6 py-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-colors ${
-                  activeStage === stage 
-                    ? 'text-[#4CAF50] border-b-4 border-[#4CAF50] bg-white/5' 
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                {stage}
-              </button>
-            ))}
-          </div>
-        )}
-      </header>
+      {/* Header */}
+      {viewState !== ViewState.ONBOARDING && (
+          <header className="bg-[#004d40] sticky top-0 z-40 border-b border-[#00332a] shadow-xl">
+            <div className="max-w-2xl mx-auto px-4 py-4 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-black italic tracking-tighter uppercase leading-none text-white drop-shadow-md">
+                    Prode<span className="text-[#FFD700]">2026</span>
+                </h1>
+              </div>
+              
+              {viewState === ViewState.DASHBOARD && (
+                 <div className="flex items-center gap-3">
+                   <div className="text-right">
+                      <span className="text-[10px] text-white/80 uppercase font-bold tracking-widest block">Tu Puntaje</span>
+                      <span className="text-3xl font-black text-[#FFD700] leading-none score-font drop-shadow-md">{totalPoints}</span>
+                   </div>
+                   <span className="text-2xl">🏆</span>
+                 </div>
+              )}
+            </div>
+
+            {/* Navigation Tabs */}
+            {(viewState === ViewState.EDITING || viewState === ViewState.DASHBOARD) && (
+              <div className="flex overflow-x-auto no-scrollbar border-t border-[#00332a] bg-[#1a1a1a]">
+                {Object.values(MatchStage).map((stage) => (
+                  <button
+                    key={stage}
+                    onClick={() => setActiveStage(stage)}
+                    className={`flex-shrink-0 px-6 py-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-colors ${
+                      activeStage === stage 
+                        ? 'text-[#4CAF50] border-b-4 border-[#4CAF50] bg-white/5' 
+                        : 'text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    {stage}
+                  </button>
+                ))}
+              </div>
+            )}
+          </header>
+      )}
 
       {/* Main Content */}
+      {viewState !== ViewState.ONBOARDING && (
       <main className="max-w-2xl mx-auto p-4">
         
         {viewState === ViewState.SHARE && currentUser && (
@@ -166,7 +213,7 @@ function App() {
                   <div className="bg-[#004d40]/90 border border-green-700/50 p-5 rounded-xl shadow-lg relative overflow-hidden group cursor-pointer hover:border-green-400 transition-colors backdrop-blur-sm" onClick={() => setViewState(ViewState.SHARE)}>
                      <div className="relative z-10">
                         <p className="text-[10px] font-bold text-green-200 uppercase tracking-widest mb-1">Identidad</p>
-                        <p className="font-mono text-lg font-bold text-white truncate">{currentUser?.userId}</p>
+                        <p className="font-mono text-lg font-bold text-white truncate">{currentUser?.userName || currentUser?.userId}</p>
                      </div>
                      <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-2 translate-y-2">
                         <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h16v12h1v4l-3-3h-4l-3 3v-4H4V4zm2 2v10h8v-2h2v2h2V6H6z" /></svg>
@@ -218,19 +265,6 @@ function App() {
                                         result={result}
                                         readOnly={viewState === ViewState.DASHBOARD && match.finished}
                                     />
-                                    
-                                    {/* AI Helper - Only visible when needed */}
-                                    {!match.finished && viewState === ViewState.EDITING && (
-                                        <button 
-                                        onClick={() => openAiForMatch(match)}
-                                        className="absolute top-2 right-2 p-1 bg-blue-50 text-[#1E90FF] rounded-full opacity-60 hover:opacity-100 transition-all shadow-sm hover:bg-blue-100 z-20 border border-blue-200"
-                                        title="Consultar IA"
-                                        >
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                                            <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14.93V17a1 1 0 11-2 0v-.07c-1.84-.2-3.23-1.63-3.23-3.43a1 1 0 012 0c0 .89.84 1.5 2 1.5s2-.61 2-1.5-.84-1.5-2-1.5c-1.84-.2-3.23-1.63-3.23-3.43a1 1 0 012 0c0 .89.84 1.5 2 1.5s2-.61 2-1.5-.84-1.5-2-1.5V5a1 1 0 112 0v.07c1.84.2 3.23 1.63 3.23 3.43a1 1 0 01-2 0c0-.89-.84-1.5-2-1.5s-2 .61-2 1.5.84 1.5 2 1.5c1.84.2 3.23 1.63 3.23 3.43a1 1 0 01-2 0z"/>
-                                        </svg>
-                                        </button>
-                                    )}
                                     </div>
                                 );
                             })}
@@ -276,15 +310,6 @@ function App() {
           </>
         )}
       </main>
-
-      {/* AI Modal */}
-      {aiModalMatch && (
-        <AIModal 
-          match={aiModalMatch} 
-          isOpen={true} 
-          onClose={() => setAiModalMatch(null)} 
-          onApplyPrediction={applyAiPrediction} 
-        />
       )}
 
     </div>

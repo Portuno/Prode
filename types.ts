@@ -39,7 +39,9 @@ export type UserProde = {
   userId: string; // The generated PRODE-CODE
   userName?: string;
   countryCode: string; // e.g., "ARG"
+  club?: string;
   predictions: Record<string, Prediction>; // matchId -> Prediction
+  playoffResolutions: Record<string, Team>; // placeholderId -> Selected Team
   createdAt: number;
 };
 
@@ -47,4 +49,10 @@ export type ScoreResult = {
   matchId: string;
   points: number;
   status: 'EXACTO' | 'GANADOR' | 'FALLO' | 'PENDIENTE';
+};
+
+export type PlayoffGroup = {
+  id: string; // Matches the placeholder team ID (e.g., 'eur_a')
+  name: string;
+  candidates: Team[];
 };
