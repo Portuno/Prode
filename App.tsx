@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Match, MatchStage, Prediction, UserProde, Team, BracketSelection } from './types';
 import { INITIAL_MATCHES, TEAMS, CANDIDATE_TEAMS } from './constants';
@@ -18,6 +17,8 @@ import CompareView from './components/CompareView';
 import Onboarding from './components/Onboarding';
 import GroupPredictor from './components/GroupPredictor';
 import KnockoutPredictor from './components/KnockoutPredictor';
+import DashboardGroups from './components/DashboardGroups';
+import DashboardBracket from './components/DashboardBracket';
 
 enum ViewState {
   ONBOARDING = 'ONBOARDING', // Stage 1
@@ -35,7 +36,9 @@ function App() {
   
   const [currentUser, setCurrentUser] = useState<UserProde | null>(null);
   const [viewState, setViewState] = useState<ViewState>(ViewState.ONBOARDING);
-  const [activeStage, setActiveStage] = useState<MatchStage>(MatchStage.GROUP);
+  
+  // Dashboard Tabs
+  const [dashboardTab, setDashboardTab] = useState<'GROUPS' | 'BRACKET'>('GROUPS');
   
   // Create a map of ALL potential teams indexed by their lowercase ID
   const teamsById = useMemo(() => {
@@ -75,20 +78,43 @@ function App() {
               
               const knockoutMatches = generateKnockoutMatches(standings, teamsById);
               
-              // Restore bracket state to matches
-              // We need to apply the 'bracket' winners to the next matches in the tree
-              const fullMatches = [...resolvedMatches, ...knockoutMatches];
-              
-              // Apply bracket progression logic
-              const finalMatches = fullMatches.map(m => {
-                  // If this match depends on previous ones (not easily done without full tree traversal here)
-                  // For viewing mode, we just show what we have. 
-                  // But for correctness, we might need to re-run the tree population if we were editable.
-                  // For the Dashboard, we primarily view the Group stage results and the static bracket state.
-                  return m;
+              // Restore bracket state to matches (Populate the tree)
+              const stages = [MatchStage.R32, MatchStage.R16, MatchStage.QF, MatchStage.SF, MatchStage.FINAL];
+              let currentTree = [...resolvedMatches, ...knockoutMatches];
+
+              // We need to propagate winners stage by stage
+              stages.forEach(stage => {
+                   const stageMatches = currentTree.filter(m => m.stage === stage);
+                   stageMatches.forEach(match => {
+                       const winnerId = saved.bracket ? saved.bracket[match.id] : undefined;
+                       const winnerTeam = winnerId ? teamsById[winnerId] : undefined;
+                       
+                       if (winnerTeam && match.nextMatchId) {
+                           // Update next match
+                           currentTree = currentTree.map(nextMatch => {
+                               if (nextMatch.id === match.nextMatchId) {
+                                   // Logic to decide Home vs Away slot
+                                   // Simple heuristic: If Home is Placeholder (MEX) or same as this match winner, use Home.
+                                   // Since we are reconstructing from scratch, placeholders are MEX.
+                                   // We fill Home first, then Away.
+                                   // To do this correctly without specific mapping, we rely on the fact that
+                                   // generateKnockoutMatches creates standard slots.
+                                   // Note: This naive filling works if the array order is consistent.
+                                   // A better way is to check if homeTeam.id === 'mex' (default placeholder)
+                                   
+                                   if (nextMatch.homeTeam.id === 'mex') {
+                                       return { ...nextMatch, homeTeam: winnerTeam };
+                                   } else if (nextMatch.awayTeam.id === 'mex') {
+                                       return { ...nextMatch, awayTeam: winnerTeam };
+                                   }
+                               }
+                               return nextMatch;
+                           });
+                       }
+                   });
               });
 
-              setMatches(finalMatches);
+              setMatches(currentTree);
           } else {
               setMatches(resolvedMatches);
           }
@@ -155,44 +181,15 @@ function App() {
       if (nextMatchId) {
           setMatches(prev => prev.map(m => {
               if (m.id === nextMatchId) {
-                  // Determine if we fill home or away slot based on where this match feeds
-                  // This simple logic assumes specific feeding structure or we check if home/away is empty/placeholder
-                  // For simplicity in this demo:
-                  // The generateKnockoutMatches defined specific flows. 
-                  // But finding WHICH slot (home/away) in the next match is tricky without explicit metadata.
-                  // Hack: Check if next match Home or Away is a "Placeholder" (MEX for now) or empty.
-                  // Better: We should know if we are the "Top" or "Bottom" feeder.
-                  
-                  // For now, let's just populate based on currently empty slots for the demo flow,
-                  // or strictly by ID map if we had it. 
-                  
-                  // Let's rely on the KnockoutPredictor to visualize it, 
-                  // but we actually need to update the `matches` state so the next round renders the correct team flag.
-                  
-                  // Find the team object
                   const winnerTeam = teamsById[winnerId];
-                  
-                  // If home is placeholder/same-as-prev-round-placeholder, replace home. Else away.
-                  // This is fragile. Let's try:
-                  // If the ID implies "Home" source...
-                  
-                  // Simple approach for the visualizer:
-                  // We update the match object in state.
-                  // Since we don't have precise 'feeder' metadata in this simplified version, 
-                  // we will iterate and check which slot is open or needs update.
-                  
-                  // However, for a robust linear flow, we usually know: Match 33 feeds Match 49 Home.
-                  // Let's hardcode a check: if `m.homeTeam.id` is the generic placeholder, fill it. Else fill away.
-                  // This works if we process matches in order.
-                  
-                  if (m.homeTeam.id === 'mex' && m.awayTeam.id === 'mex') { // 'mex' was our fallback placeholder
+                  // Simple fill logic for interaction phase
+                  if (m.homeTeam.id === 'mex' && m.awayTeam.id === 'mex') {
                        return { ...m, homeTeam: winnerTeam };
                   } else if (m.homeTeam.id !== 'mex' && m.awayTeam.id === 'mex') {
                        return { ...m, awayTeam: winnerTeam };
                   }
-                  
-                  // If we are updating a choice (re-clicking), we might need to verify which slot we occupied.
-                  // Ignored for MVP happy path.
+                  // If updating an existing choice, we can't easily distinguish home/away without more state.
+                  // For the linear flow, this naive approach is acceptable.
                   return m;
               }
               return m;
@@ -245,21 +242,22 @@ function App() {
                </div>
             </div>
             {/* Tabs */}
-            <div className="flex overflow-x-auto no-scrollbar border-t border-[#00332a] bg-[#1a1a1a]">
-                {Object.values(MatchStage).map((stage) => (
-                  <button
-                    key={stage}
-                    onClick={() => setActiveStage(stage)}
-                    className={`flex-shrink-0 px-6 py-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-colors ${
-                      activeStage === stage 
-                        ? 'text-[#4CAF50] border-b-4 border-[#4CAF50] bg-white/5' 
-                        : 'text-gray-400 hover:text-gray-200'
-                    }`}
-                  >
-                    {stage}
-                  </button>
-                ))}
-            </div>
+            {viewState === ViewState.DASHBOARD && (
+                <div className="flex w-full bg-[#1a1a1a]">
+                    <button 
+                       onClick={() => setDashboardTab('GROUPS')}
+                       className={`flex-1 py-4 text-xs font-bold uppercase tracking-widest transition-colors ${dashboardTab === 'GROUPS' ? 'text-[#4CAF50] border-b-4 border-[#4CAF50] bg-white/5' : 'text-gray-400 hover:text-gray-200'}`}
+                    >
+                       Fase de Grupos
+                    </button>
+                    <button 
+                       onClick={() => setDashboardTab('BRACKET')}
+                       className={`flex-1 py-4 text-xs font-bold uppercase tracking-widest transition-colors ${dashboardTab === 'BRACKET' ? 'text-[#4CAF50] border-b-4 border-[#4CAF50] bg-white/5' : 'text-gray-400 hover:text-gray-200'}`}
+                    >
+                       Eliminatorias
+                    </button>
+                </div>
+            )}
           </header>
       )}
 
@@ -298,61 +296,40 @@ function App() {
 
         {viewState === ViewState.DASHBOARD && currentUser && (
           <>
-            <div className="mb-8 grid grid-cols-2 gap-4 animate-fade-in-up">
-                  <div className="bg-[#004d40]/90 border border-green-700/50 p-5 rounded-xl shadow-lg relative overflow-hidden group cursor-pointer hover:border-green-400 transition-colors backdrop-blur-sm" onClick={() => setViewState(ViewState.SHARE)}>
+            <div className="mb-6 grid grid-cols-2 gap-4 animate-fade-in-up">
+                  <div className="bg-[#004d40]/90 border border-green-700/50 p-4 rounded-xl shadow-lg relative overflow-hidden group cursor-pointer hover:border-green-400 transition-colors backdrop-blur-sm" onClick={() => setViewState(ViewState.SHARE)}>
                      <div className="relative z-10">
                         <p className="text-[10px] font-bold text-green-200 uppercase tracking-widest mb-1">Identidad</p>
-                        <p className="font-mono text-lg font-bold text-white truncate">{currentUser.userName}</p>
+                        <p className="font-mono text-sm font-bold text-white truncate uppercase">{currentUser.userId}</p>
                      </div>
                   </div>
 
                   <button 
                     onClick={() => setViewState(ViewState.COMPARE)}
-                    className="bg-gradient-to-br from-[#1E90FF] to-[#0056b3] text-white p-5 rounded-xl shadow-lg relative overflow-hidden hover:opacity-90 transition-all text-left border border-blue-400/30 backdrop-blur-sm"
+                    className="bg-gradient-to-br from-[#1E90FF] to-[#0056b3] text-white p-4 rounded-xl shadow-lg relative overflow-hidden hover:opacity-90 transition-all text-left border border-blue-400/30 backdrop-blur-sm"
                   >
                      <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest mb-1">Desafío</p>
                      <p className="font-bold text-lg leading-tight uppercase font-chakra">Comparar</p>
                   </button>
             </div>
 
-            {/* List Matches for Active Stage */}
-            <div className="space-y-6 animate-fade-in-up">
-                {matches.filter(m => m.stage === activeStage).map(match => {
-                     // For Bracket stages in Dashboard, show simplified view
-                     if (match.stage !== MatchStage.GROUP) {
-                         const winnerId = bracket[match.id];
-                         return (
-                            <div key={match.id} className="bg-white rounded-xl shadow p-4 flex justify-between items-center opacity-90">
-                                <div className={`flex flex-col items-center w-24 ${winnerId === match.homeTeam.id ? 'font-bold text-green-600' : 'text-gray-500'}`}>
-                                    <span className="text-xs uppercase">{match.homeTeam.name}</span>
-                                </div>
-                                <span className="text-gray-300 font-bold">VS</span>
-                                <div className={`flex flex-col items-center w-24 ${winnerId === match.awayTeam.id ? 'font-bold text-green-600' : 'text-gray-500'}`}>
-                                    <span className="text-xs uppercase">{match.awayTeam.name}</span>
-                                </div>
-                            </div>
-                         )
-                     }
-
-                     return (
-                        <div key={match.id} className="relative group rounded-xl overflow-hidden shadow-lg">
-                            <MatchCard 
-                                match={match} 
-                                prediction={predictions[match.id] || { matchId: match.id, homeScore: '', awayScore: '' }}
-                                onPredict={() => {}} // Read only in dashboard
-                                result={calculatePoints(predictions[match.id], match)}
-                                readOnly={true}
-                            />
-                        </div>
-                     )
-                })}
-                {matches.filter(m => m.stage === activeStage).length === 0 && (
-                    <p className="text-center text-white/50 py-10">No hay partidos en esta fase aún.</p>
-                )}
-            </div>
+            {/* List Matches for Active Tab */}
+            {dashboardTab === 'GROUPS' ? (
+                <DashboardGroups 
+                    matches={matches} 
+                    predictions={predictions} 
+                    teamsById={teamsById} 
+                />
+            ) : (
+                <DashboardBracket 
+                    matches={matches} 
+                    bracket={bracket} 
+                    teamsById={teamsById} 
+                />
+            )}
 
             {/* Sim Button */}
-            <div className="fixed bottom-4 right-4">
+            <div className="fixed bottom-4 right-4 z-50">
                 <button
                     onClick={toggleLiveSimulation}
                     className="bg-gray-900 text-white w-12 h-12 rounded-full shadow-xl font-bold border border-gray-700 hover:bg-black flex items-center justify-center"
