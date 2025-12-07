@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Match, MatchStage, Prediction, UserProde, Team, BracketSelection } from './types';
 import { INITIAL_MATCHES, TEAMS, CANDIDATE_TEAMS } from './constants';
@@ -7,6 +8,7 @@ import {
   getTotalScore, 
   saveProde, 
   loadProde,
+  clearProde,
   mockSimulateResults,
   calculateGroupStandings,
   generateKnockoutMatches
@@ -93,15 +95,6 @@ function App() {
                            // Update next match
                            currentTree = currentTree.map(nextMatch => {
                                if (nextMatch.id === match.nextMatchId) {
-                                   // Logic to decide Home vs Away slot
-                                   // Simple heuristic: If Home is Placeholder (MEX) or same as this match winner, use Home.
-                                   // Since we are reconstructing from scratch, placeholders are MEX.
-                                   // We fill Home first, then Away.
-                                   // To do this correctly without specific mapping, we rely on the fact that
-                                   // generateKnockoutMatches creates standard slots.
-                                   // Note: This naive filling works if the array order is consistent.
-                                   // A better way is to check if homeTeam.id === 'mex' (default placeholder)
-                                   
                                    if (nextMatch.homeTeam.id === 'mex') {
                                        return { ...nextMatch, homeTeam: winnerTeam };
                                    } else if (nextMatch.awayTeam.id === 'mex') {
@@ -118,9 +111,25 @@ function App() {
           } else {
               setMatches(resolvedMatches);
           }
+
+          // SMART RESUME LOGIC
+          // Determine where to send the user based on how much data they have
+          const hasChampion = saved.bracket && saved.bracket['m64'];
+          const hasGroupPredictions = Object.keys(saved.predictions).length > 10; // Approx check
+          
+          if (hasChampion) {
+              setViewState(ViewState.DASHBOARD);
+          } else if (hasGroupPredictions) {
+              // User finished groups but not bracket (or is in middle of bracket)
+              setViewState(ViewState.BRACKET);
+          } else {
+              // User finished onboarding but hasn't finished groups
+              setViewState(ViewState.GROUPS);
+          }
+      } else {
+          // Should not happen if saved exists, but fallback
+          setViewState(ViewState.ONBOARDING);
       }
-      
-      setViewState(ViewState.DASHBOARD);
     } else {
       setViewState(ViewState.ONBOARDING);
     }
@@ -133,7 +142,7 @@ function App() {
       const resolvedMatches = resolveMatchesWithPlayoffs(INITIAL_MATCHES, data.resolutions);
       setMatches(resolvedMatches);
 
-      // Initialize User State (not saved yet)
+      // Initialize User State (Intermediate Save)
       const newProde: UserProde = {
           userId,
           userName: data.name,
@@ -144,17 +153,20 @@ function App() {
           bracket: {},
           createdAt: Date.now()
       };
+      
       setCurrentUser(newProde);
+      saveProde(newProde); // AUTO-SAVE STEP 1
       
       // Move to Stage 2
       setViewState(ViewState.GROUPS);
   };
 
   const handlePredictionChange = (matchId: string, home: number | '', away: number | '') => {
-    setPredictions(prev => ({
-      ...prev,
+    const newPredictions = {
+      ...predictions,
       [matchId]: { matchId, homeScore: home, awayScore: away }
-    }));
+    };
+    setPredictions(newPredictions);
   };
 
   // --- STAGE 2: GROUPS COMPLETE ---
@@ -168,7 +180,14 @@ function App() {
       // 3. Update State
       setMatches(prev => [...prev.filter(m => m.stage === MatchStage.GROUP), ...knockoutMatches]);
       
-      // 4. Move to Stage 3
+      // 4. Intermediate Save
+      if (currentUser) {
+          const updatedProde = { ...currentUser, predictions };
+          saveProde(updatedProde); // AUTO-SAVE STEP 2
+          setCurrentUser(updatedProde);
+      }
+
+      // 5. Move to Stage 3
       setViewState(ViewState.BRACKET);
   };
 
@@ -188,8 +207,6 @@ function App() {
                   } else if (m.homeTeam.id !== 'mex' && m.awayTeam.id === 'mex') {
                        return { ...m, awayTeam: winnerTeam };
                   }
-                  // If updating an existing choice, we can't easily distinguish home/away without more state.
-                  // For the linear flow, this naive approach is acceptable.
                   return m;
               }
               return m;
@@ -208,6 +225,13 @@ function App() {
           saveProde(finalProde);
           setCurrentUser(finalProde);
           setViewState(ViewState.SHARE);
+      }
+  };
+
+  const handleReset = () => {
+      if (window.confirm('¿Estás seguro de reiniciar todo? Se borrará tu progreso.')) {
+          clearProde();
+          window.location.reload();
       }
   };
 
@@ -328,8 +352,15 @@ function App() {
                 />
             )}
 
-            {/* Sim Button */}
-            <div className="fixed bottom-4 right-4 z-50">
+            {/* Sim Button & Reset */}
+            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+                <button
+                    onClick={handleReset}
+                    className="bg-red-900/80 text-white w-12 h-12 rounded-full shadow-xl font-bold border border-red-700 hover:bg-red-800 flex items-center justify-center text-xs"
+                    title="Reiniciar App"
+                >
+                    RESET
+                </button>
                 <button
                     onClick={toggleLiveSimulation}
                     className="bg-gray-900 text-white w-12 h-12 rounded-full shadow-xl font-bold border border-gray-700 hover:bg-black flex items-center justify-center"

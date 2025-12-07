@@ -7,6 +7,9 @@ const POINTS_EXACT = 5;
 const POINTS_RESULT = 3;
 const POINTS_FAIL = 0;
 
+// VERSIONED STORAGE KEY TO FIX CACHING ISSUES
+const STORAGE_KEY = 'prode_2026_v4_store';
+
 export const generateUniqueId = (country: string): string => {
   const cleanCountry = country.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
   const randomHash = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -57,12 +60,16 @@ export const getTotalScore = (predictions: Record<string, Prediction>, matches: 
 };
 
 export const saveProde = (prode: UserProde) => {
-  localStorage.setItem('my_prode', JSON.stringify(prode));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(prode));
 };
 
 export const loadProde = (): UserProde | null => {
-  const data = localStorage.getItem('my_prode');
+  const data = localStorage.getItem(STORAGE_KEY);
   return data ? JSON.parse(data) : null;
+};
+
+export const clearProde = () => {
+    localStorage.removeItem(STORAGE_KEY);
 };
 
 // Mock function to simulate "AI" finding results
