@@ -36,16 +36,44 @@ const KnockoutPredictor: React.FC<KnockoutPredictorProps> = ({ matches, bracket,
       onUpdateBracket(match.id, team.id, match.nextMatchId);
   };
 
+  const handleRandomStageFill = () => {
+      currentMatches.forEach(match => {
+          // Randomly pick Home or Away
+          // Note: In later stages, teams might be TBD if previous stage wasn't filled, 
+          // but strictly following the flow ensures they are populated.
+          const winner = Math.random() > 0.5 ? match.homeTeam : match.awayTeam;
+          
+          // Safety check if teams are placeholders (though logic should prevent this if flow is followed)
+          if (winner) {
+            onUpdateBracket(match.id, winner.id, match.nextMatchId);
+          }
+      });
+
+      // Auto advance after short delay
+      setTimeout(() => {
+          handleAdvance();
+      }, 300);
+  };
+
   const isFinal = activeStage === MatchStage.FINAL;
 
   return (
     <div className="animate-fade-in-up pb-32">
-        <div className="text-center mb-6">
+        <div className="text-center mb-6 relative">
           <span className="text-green-200 text-[10px] font-bold uppercase tracking-widest bg-[#004d40]/50 px-3 py-1 rounded-full">Etapa 3/3: El Camino a la Copa</span>
           <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter mt-2 drop-shadow-md">
              {activeStage}
           </h2>
           <p className="text-white/70 text-sm mt-1">Toca el equipo que pasa de ronda</p>
+
+           {/* DEV BUTTON: Random Select */}
+           <button 
+                onClick={handleRandomStageFill}
+                className="absolute top-0 right-0 bg-purple-600 text-white px-3 py-1 rounded-full shadow-lg z-50 text-xs font-bold hover:bg-purple-500"
+                title="Auto-fill Stage Randomly & Next"
+            >
+                ⚡ Random
+            </button>
        </div>
 
        <div className="space-y-4">

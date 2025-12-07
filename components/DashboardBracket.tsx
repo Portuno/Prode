@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Match, MatchStage, BracketSelection, Team } from '../types';
 
@@ -18,50 +19,109 @@ const DashboardBracket: React.FC<DashboardBracketProps> = ({ matches, bracket, t
   const champion = championId ? teamsById[championId] : null;
 
   return (
-    <div className="overflow-x-auto pb-20 no-scrollbar animate-fade-in-up">
-        <div className="flex gap-8 min-w-max px-4">
-            {stages.map((stage) => (
-                <div key={stage} className="flex flex-col gap-4 w-64">
-                     <h3 className="text-white/80 font-bold uppercase tracking-widest text-center sticky left-0 mb-4">{stage}</h3>
-                     <div className="flex flex-col justify-around h-full gap-4">
-                        {getStageMatches(stage).map(match => {
-                            const winnerId = bracket[match.id];
-                            return (
-                                <div key={match.id} className="bg-white rounded-lg shadow-md p-3 relative">
-                                    <div className="text-[9px] text-gray-400 font-bold uppercase mb-2 text-center">{match.id}</div>
-                                    <div className={`flex justify-between items-center mb-1 p-1 rounded ${winnerId === match.homeTeam.id ? 'bg-yellow-100 font-bold' : ''}`}>
-                                        <div className="flex items-center gap-2">
-                                            <img src={`https://flagcdn.com/w20/${match.homeTeam.flagCode}.png`} className="w-5 h-3 rounded shadow-sm object-cover" />
-                                            <span className="text-xs uppercase truncate w-24">{match.homeTeam.name}</span>
-                                        </div>
-                                    </div>
-                                    <div className={`flex justify-between items-center p-1 rounded ${winnerId === match.awayTeam.id ? 'bg-yellow-100 font-bold' : ''}`}>
-                                        <div className="flex items-center gap-2">
-                                            <img src={`https://flagcdn.com/w20/${match.awayTeam.flagCode}.png`} className="w-5 h-3 rounded shadow-sm object-cover" />
-                                            <span className="text-xs uppercase truncate w-24">{match.awayTeam.name}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                     </div>
-                </div>
-            ))}
+    <div className="w-full overflow-x-auto pb-12 pt-4 no-scrollbar animate-fade-in-up">
+        {/* Container with min-width to ensure scrolling on mobile but fit on desktop if possible */}
+        <div className="flex px-4 min-w-[200vw] md:min-w-[1200px] h-[800px] md:h-[600px]">
+            
+            {stages.map((stage, stageIndex) => {
+                const stageMatches = getStageMatches(stage);
+                const isFinal = stage === MatchStage.FINAL;
 
-            {/* Champion Card */}
-            <div className="flex flex-col justify-center w-80 pl-8">
-                 <div className="bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-2xl p-6 shadow-2xl text-center transform scale-110 border-4 border-white/30 relative overflow-hidden">
-                     <div className="absolute inset-0 bg-white/20 pattern-net opacity-30"></div>
-                     <h3 className="text-white font-black italic uppercase text-2xl mb-4 drop-shadow-md relative z-10">¡Tu Campeón!</h3>
-                     {champion ? (
-                         <div className="relative z-10">
-                             <img src={`https://flagcdn.com/w160/${champion.flagCode}.png`} className="w-32 h-20 mx-auto rounded-lg shadow-lg mb-4 object-cover border-4 border-white" />
-                             <div className="text-3xl font-black text-white uppercase drop-shadow-sm">{champion.name}</div>
-                             <div className="text-6xl mt-2 animate-bounce">🏆</div>
-                         </div>
-                     ) : (
-                         <div className="text-white/60 font-bold uppercase relative z-10">Por definir</div>
-                     )}
+                return (
+                    <div key={stage} className="flex flex-col flex-1 relative group">
+                        {/* Header Sticky */}
+                        <div className="text-center mb-4 sticky top-0 z-20">
+                            <span className="bg-[#004d40] text-white/90 text-[10px] md:text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-white/10 shadow-sm">
+                                {stage}
+                            </span>
+                        </div>
+
+                        {/* Matches Column - Justify Around spreads them evenly to align with connectors */}
+                        <div className="flex flex-col justify-around h-full relative z-10">
+                            {stageMatches.map((match, index) => {
+                                const winnerId = bracket[match.id];
+                                const isHomeWinner = winnerId === match.homeTeam.id;
+                                const isAwayWinner = winnerId === match.awayTeam.id;
+
+                                return (
+                                    <div key={match.id} className="relative flex items-center">
+                                        
+                                        {/* Connector Lines (Left side - entry) */}
+                                        {stageIndex > 0 && (
+                                            <div className="absolute -left-4 w-4 border-b-2 border-gray-400/30"></div>
+                                        )}
+
+                                        {/* Connector Lines (Right side - exit) */}
+                                        {!isFinal && (
+                                            <div className={`absolute -right-8 w-8 h-full border-r-2 border-gray-400/30 top-1/2 ${index % 2 === 0 ? 'border-t-2 rounded-tr-xl' : 'border-b-2 rounded-br-xl transform -translate-y-1/2'}`} style={{ height: '50%' }}></div>
+                                        )}
+
+                                        {/* MATCH CARD */}
+                                        <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden w-full relative z-10 transition-transform hover:scale-105 duration-200">
+                                            {/* Match ID Header */}
+                                            <div className="bg-gray-50 border-b border-gray-100 px-2 py-0.5 flex justify-between items-center">
+                                                <span className="text-[8px] font-bold text-gray-400 uppercase">{match.date}</span>
+                                                <span className="text-[8px] font-bold text-gray-300">#{match.id.replace('m', '')}</span>
+                                            </div>
+
+                                            {/* Home Team */}
+                                            <div className={`flex items-center justify-between px-2 py-1.5 border-b border-gray-100 transition-colors ${isHomeWinner ? 'bg-emerald-100' : 'opacity-60 grayscale-[0.5]'}`}>
+                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                    <img src={`https://flagcdn.com/w40/${match.homeTeam.flagCode}.png`} className="w-5 h-3.5 rounded-[2px] shadow-sm object-cover" />
+                                                    <span className={`text-[10px] md:text-xs font-bold uppercase truncate max-w-[80px] ${isHomeWinner ? 'text-emerald-900' : 'text-gray-500'}`}>
+                                                        {match.homeTeam.name}
+                                                    </span>
+                                                </div>
+                                                {isHomeWinner && <span className="text-[8px] bg-emerald-600 text-white px-1 rounded-sm ml-1">✓</span>}
+                                            </div>
+
+                                            {/* Away Team */}
+                                            <div className={`flex items-center justify-between px-2 py-1.5 transition-colors ${isAwayWinner ? 'bg-emerald-100' : 'opacity-60 grayscale-[0.5]'}`}>
+                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                    <img src={`https://flagcdn.com/w40/${match.awayTeam.flagCode}.png`} className="w-5 h-3.5 rounded-[2px] shadow-sm object-cover" />
+                                                    <span className={`text-[10px] md:text-xs font-bold uppercase truncate max-w-[80px] ${isAwayWinner ? 'text-emerald-900' : 'text-gray-500'}`}>
+                                                        {match.awayTeam.name}
+                                                    </span>
+                                                </div>
+                                                {isAwayWinner && <span className="text-[8px] bg-emerald-600 text-white px-1 rounded-sm ml-1">✓</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )
+            })}
+
+            {/* Champion Column */}
+            <div className="flex flex-col justify-center items-center w-64 md:w-80 ml-8 relative">
+                 {/* Connector to Final */}
+                 <div className="absolute left-0 w-8 border-b-2 border-gray-400/30"></div>
+
+                 <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl p-1 shadow-2xl transform hover:scale-105 transition-transform duration-300">
+                     <div className="bg-[#004d40] rounded-xl p-6 text-center relative overflow-hidden">
+                        <div className="pattern-net absolute inset-0 opacity-20"></div>
+                        
+                        <h3 className="text-[#FFD700] font-black italic uppercase text-xl mb-4 drop-shadow-md relative z-10 tracking-wider">
+                            Tu Campeón
+                        </h3>
+                        
+                        {champion ? (
+                            <div className="relative z-10 animate-fade-in-up">
+                                <div className="relative inline-block">
+                                    <div className="absolute -inset-4 bg-yellow-500 blur-xl opacity-20 animate-pulse"></div>
+                                    <img src={`https://flagcdn.com/w160/${champion.flagCode}.png`} className="w-28 h-20 mx-auto rounded-lg shadow-lg mb-4 object-cover border-2 border-[#FFD700] relative z-10" />
+                                </div>
+                                <div className="text-2xl font-black text-white uppercase drop-shadow-sm leading-none">{champion.name}</div>
+                                <div className="mt-4 text-4xl filter drop-shadow-lg">🏆</div>
+                            </div>
+                        ) : (
+                            <div className="text-white/40 font-bold uppercase text-xs border border-dashed border-white/20 p-4 rounded-lg">
+                                Por definir
+                            </div>
+                        )}
+                     </div>
                  </div>
             </div>
         </div>
