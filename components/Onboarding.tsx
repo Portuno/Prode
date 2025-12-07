@@ -40,6 +40,16 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     }, 400);
   };
 
+  const handleRandomSelect = () => {
+    const newResolutions: Record<string, Team> = {};
+    PLAYOFF_GROUPS.forEach(group => {
+        const randomTeam = group.candidates[Math.floor(Math.random() * group.candidates.length)];
+        newResolutions[group.id] = randomTeam;
+    });
+    setResolutions(newResolutions);
+    setStep('LOADING');
+  };
+
   useEffect(() => {
     if (step === 'LOADING') {
         // Simulate processing/generation
@@ -118,6 +128,15 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
 
       return (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-[#004d40] pattern-net">
+            {/* DEV BUTTON: Random Select */}
+            <button 
+                onClick={handleRandomSelect}
+                className="absolute top-4 right-4 bg-purple-600 text-white p-2 rounded-full shadow-lg z-50 text-xs font-bold hover:bg-purple-500"
+                title="Auto-fill Randomly (Testing)"
+            >
+                ⚡ Random
+            </button>
+
             <div className="w-full max-w-lg mb-8">
                  <div className="h-2 bg-black/30 rounded-full overflow-hidden">
                      <div className="h-full bg-[#4CAF50] transition-all duration-500 ease-out" style={{ width: `${progress}%` }}></div>

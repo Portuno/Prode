@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { UserProde } from '../types';
 
@@ -28,13 +29,13 @@ const ShareView: React.FC<ShareViewProps> = ({ prode, onBack }) => {
   };
 
   return (
-    <div className="pattern-net fixed inset-0 z-50 overflow-y-auto flex flex-col items-center justify-center min-h-[100dvh] text-center p-4">
+    <div className="pattern-net fixed inset-0 z-50 overflow-y-auto flex flex-col items-center justify-center min-h-[100dvh] text-center p-4 bg-[#004d40]">
       
       <div className="mb-6 animate-fade-in-up">
-        <h2 className="text-5xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-none drop-shadow-md">
-            Prode<span className="text-[#FF4500]">2026</span>
+        <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-none drop-shadow-md">
+            ¡Prode <span className="text-[#FFD700]">Listo!</span>
         </h2>
-        <p className="text-white/80 font-bold tracking-[0.2em] text-xs mt-2 uppercase bg-black/30 inline-block px-4 py-1 rounded-full backdrop-blur-sm">Copa Mundial Oficial</p>
+        <p className="text-white/80 font-bold tracking-[0.2em] text-xs mt-4 uppercase bg-black/30 inline-block px-4 py-2 rounded-full backdrop-blur-sm">Tu jugada está guardada</p>
       </div>
 
       {/* Ticket Card */}
@@ -88,18 +89,10 @@ const ShareView: React.FC<ShareViewProps> = ({ prode, onBack }) => {
         </button>
         
         <button 
-          onClick={handleTwitter}
-          className="w-full py-4 px-6 bg-black hover:bg-gray-900 text-white rounded-full font-bold shadow-lg active:shadow-none active:translate-y-1 transition-all flex items-center justify-center gap-3"
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          <span>Publicar en X</span>
-        </button>
-
-        <button 
           onClick={onBack}
           className="w-full py-4 px-6 bg-white/10 backdrop-blur-md border border-white/30 text-white rounded-full font-bold hover:bg-white/20 active:scale-95 transition-all mt-4"
         >
-          Volver a mi Tablero
+          IR AL TRACKER DE PUNTOS
         </button>
       </div>
     </div>

@@ -27,6 +27,8 @@ export type Match = {
   finished: boolean;
   officialHomeScore?: number;
   officialAwayScore?: number;
+  // For bracket logic
+  nextMatchId?: string; // ID of the match the winner goes to
 };
 
 export type Prediction = {
@@ -35,6 +37,8 @@ export type Prediction = {
   awayScore: number | '';
 };
 
+export type BracketSelection = Record<string, string>; // matchId -> winnerTeamId
+
 export type UserProde = {
   userId: string; // The generated PRODE-CODE
   userName?: string;
@@ -42,6 +46,7 @@ export type UserProde = {
   club?: string;
   predictions: Record<string, Prediction>; // matchId -> Prediction
   playoffResolutions: Record<string, Team>; // placeholderId -> Selected Team
+  bracket: BracketSelection; // Knockout predictions
   createdAt: number;
 };
 
@@ -55,4 +60,12 @@ export type PlayoffGroup = {
   id: string; // Matches the placeholder team ID (e.g., 'eur_a')
   name: string;
   candidates: Team[];
+};
+
+export type GroupStats = {
+  teamId: string;
+  points: number;
+  gd: number; // Goal Difference
+  gf: number; // Goals For
+  group: string;
 };
