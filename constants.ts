@@ -1,77 +1,78 @@
+
 import { Match, MatchStage, Team } from './types';
 
 export const TEAMS: Record<string, Team> = {
   // Group A
-  MEX: { id: 'mex', name: 'México', flag: '🇲🇽', code: 'MEX' },
-  RSA: { id: 'rsa', name: 'Sudáfrica', flag: '🇿🇦', code: 'RSA' },
-  KOR: { id: 'kor', name: 'Rep. de Corea', flag: '🇰🇷', code: 'KOR' },
-  EUR_A: { id: 'eur_a', name: 'UEFA Playoff A', flag: '🇪🇺', code: 'EUR' }, // CZE/DEN/MKD/IRL
+  MEX: { id: 'mex', name: 'México', flag: '🇲🇽', code: 'MEX', flagCode: 'mx' },
+  RSA: { id: 'rsa', name: 'Sudáfrica', flag: '🇿🇦', code: 'RSA', flagCode: 'za' },
+  KOR: { id: 'kor', name: 'Rep. de Corea', flag: '🇰🇷', code: 'KOR', flagCode: 'kr' },
+  EUR_A: { id: 'eur_a', name: 'UEFA Playoff A', flag: '🇪🇺', code: 'EUR', flagCode: 'eu' }, // CZE/DEN/MKD/IRL
 
   // Group B
-  CAN: { id: 'can', name: 'Canadá', flag: '🇨🇦', code: 'CAN' },
-  EUR_B: { id: 'eur_b', name: 'UEFA Playoff B', flag: '🇪🇺', code: 'EUR' }, // ITA/BIH/WAL/NIR
-  QAT: { id: 'qat', name: 'Catar', flag: '🇶🇦', code: 'QAT' },
-  SUI: { id: 'sui', name: 'Suiza', flag: '🇨🇭', code: 'SUI' },
+  CAN: { id: 'can', name: 'Canadá', flag: '🇨🇦', code: 'CAN', flagCode: 'ca' },
+  EUR_B: { id: 'eur_b', name: 'UEFA Playoff B', flag: '🇪🇺', code: 'EUR', flagCode: 'eu' }, // ITA/BIH/WAL/NIR
+  QAT: { id: 'qat', name: 'Catar', flag: '🇶🇦', code: 'QAT', flagCode: 'qa' },
+  SUI: { id: 'sui', name: 'Suiza', flag: '🇨🇭', code: 'SUI', flagCode: 'ch' },
 
   // Group C
-  BRA: { id: 'bra', name: 'Brasil', flag: '🇧🇷', code: 'BRA' },
-  MAR: { id: 'mar', name: 'Marruecos', flag: '🇲🇦', code: 'MAR' },
-  HAI: { id: 'hai', name: 'Haití', flag: '🇭🇹', code: 'HAI' },
-  SCO: { id: 'sco', name: 'Escocia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', code: 'SCO' },
+  BRA: { id: 'bra', name: 'Brasil', flag: '🇧🇷', code: 'BRA', flagCode: 'br' },
+  MAR: { id: 'mar', name: 'Marruecos', flag: '🇲🇦', code: 'MAR', flagCode: 'ma' },
+  HAI: { id: 'hai', name: 'Haití', flag: '🇭🇹', code: 'HAI', flagCode: 'ht' },
+  SCO: { id: 'sco', name: 'Escocia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', code: 'SCO', flagCode: 'gb-sct' },
 
   // Group D
-  USA: { id: 'usa', name: 'USA', flag: '🇺🇸', code: 'USA' },
-  PAR: { id: 'par', name: 'Paraguay', flag: '🇵🇾', code: 'PAR' },
-  AUS: { id: 'aus', name: 'Australia', flag: '🇦🇺', code: 'AUS' },
-  EUR_C: { id: 'eur_c', name: 'UEFA Playoff C', flag: '🇪🇺', code: 'EUR' }, // TUR/ROU/SVK/KOS
+  USA: { id: 'usa', name: 'USA', flag: '🇺🇸', code: 'USA', flagCode: 'us' },
+  PAR: { id: 'par', name: 'Paraguay', flag: '🇵🇾', code: 'PAR', flagCode: 'py' },
+  AUS: { id: 'aus', name: 'Australia', flag: '🇦🇺', code: 'AUS', flagCode: 'au' },
+  EUR_C: { id: 'eur_c', name: 'UEFA Playoff C', flag: '🇪🇺', code: 'EUR', flagCode: 'eu' }, // TUR/ROU/SVK/KOS
 
   // Group E
-  GER: { id: 'ger', name: 'Alemania', flag: '🇩🇪', code: 'GER' },
-  CUW: { id: 'cuw', name: 'Curazao', flag: '🇨🇼', code: 'CUW' },
-  CIV: { id: 'civ', name: 'Costa de Marfil', flag: '🇨🇮', code: 'CIV' },
-  ECU: { id: 'ecu', name: 'Ecuador', flag: '🇪🇨', code: 'ECU' },
+  GER: { id: 'ger', name: 'Alemania', flag: '🇩🇪', code: 'GER', flagCode: 'de' },
+  CUW: { id: 'cuw', name: 'Curazao', flag: '🇨🇼', code: 'CUW', flagCode: 'cw' },
+  CIV: { id: 'civ', name: 'Costa de Marfil', flag: '🇨🇮', code: 'CIV', flagCode: 'ci' },
+  ECU: { id: 'ecu', name: 'Ecuador', flag: '🇪🇨', code: 'ECU', flagCode: 'ec' },
 
   // Group F
-  NED: { id: 'ned', name: 'Países Bajos', flag: '🇳🇱', code: 'NED' },
-  JPN: { id: 'jpn', name: 'Japón', flag: '🇯🇵', code: 'JPN' },
-  EUR_D: { id: 'eur_d', name: 'UEFA Playoff D', flag: '🇪🇺', code: 'EUR' }, // UKR/SWE/POL/ALB
-  TUN: { id: 'tun', name: 'Túnez', flag: '🇹🇳', code: 'TUN' },
+  NED: { id: 'ned', name: 'Países Bajos', flag: '🇳🇱', code: 'NED', flagCode: 'nl' },
+  JPN: { id: 'jpn', name: 'Japón', flag: '🇯🇵', code: 'JPN', flagCode: 'jp' },
+  EUR_D: { id: 'eur_d', name: 'UEFA Playoff D', flag: '🇪🇺', code: 'EUR', flagCode: 'eu' }, // UKR/SWE/POL/ALB
+  TUN: { id: 'tun', name: 'Túnez', flag: '🇹🇳', code: 'TUN', flagCode: 'tn' },
 
   // Group G
-  BEL: { id: 'bel', name: 'Bélgica', flag: '🇧🇪', code: 'BEL' },
-  EGY: { id: 'egy', name: 'Egipto', flag: '🇪🇬', code: 'EGY' },
-  IRN: { id: 'irn', name: 'Irán', flag: '🇮🇷', code: 'IRN' },
-  NZL: { id: 'nzl', name: 'Nueva Zelanda', flag: '🇳🇿', code: 'NZL' },
+  BEL: { id: 'bel', name: 'Bélgica', flag: '🇧🇪', code: 'BEL', flagCode: 'be' },
+  EGY: { id: 'egy', name: 'Egipto', flag: '🇪🇬', code: 'EGY', flagCode: 'eg' },
+  IRN: { id: 'irn', name: 'Irán', flag: '🇮🇷', code: 'IRN', flagCode: 'ir' },
+  NZL: { id: 'nzl', name: 'Nueva Zelanda', flag: '🇳🇿', code: 'NZL', flagCode: 'nz' },
 
   // Group H
-  ESP: { id: 'esp', name: 'España', flag: '🇪🇸', code: 'ESP' },
-  CPV: { id: 'cpv', name: 'Cabo Verde', flag: '🇨🇻', code: 'CPV' },
-  KSA: { id: 'ksa', name: 'Arabia Saudí', flag: '🇸🇦', code: 'KSA' },
-  URU: { id: 'uru', name: 'Uruguay', flag: '🇺🇾', code: 'URU' },
+  ESP: { id: 'esp', name: 'España', flag: '🇪🇸', code: 'ESP', flagCode: 'es' },
+  CPV: { id: 'cpv', name: 'Cabo Verde', flag: '🇨🇻', code: 'CPV', flagCode: 'cv' },
+  KSA: { id: 'ksa', name: 'Arabia Saudí', flag: '🇸🇦', code: 'KSA', flagCode: 'sa' },
+  URU: { id: 'uru', name: 'Uruguay', flag: '🇺🇾', code: 'URU', flagCode: 'uy' },
 
   // Group I
-  FRA: { id: 'fra', name: 'Francia', flag: '🇫🇷', code: 'FRA' },
-  SEN: { id: 'sen', name: 'Senegal', flag: '🇸🇳', code: 'SEN' },
-  IPO_A: { id: 'ipo_a', name: 'Playoff Inter A', flag: '🏳️', code: 'IPO' }, // IRQ/BOL/SUR
-  NOR: { id: 'nor', name: 'Noruega', flag: '🇳🇴', code: 'NOR' },
+  FRA: { id: 'fra', name: 'Francia', flag: '🇫🇷', code: 'FRA', flagCode: 'fr' },
+  SEN: { id: 'sen', name: 'Senegal', flag: '🇸🇳', code: 'SEN', flagCode: 'sn' },
+  IPO_A: { id: 'ipo_a', name: 'Playoff Inter A', flag: '🏳️', code: 'IPO', flagCode: 'un' }, // IRQ/BOL/SUR
+  NOR: { id: 'nor', name: 'Noruega', flag: '🇳🇴', code: 'NOR', flagCode: 'no' },
 
   // Group J
-  ARG: { id: 'arg', name: 'Argentina', flag: '🇦🇷', code: 'ARG' },
-  ALG: { id: 'alg', name: 'Argelia', flag: '🇩🇿', code: 'ALG' },
-  AUT: { id: 'aut', name: 'Austria', flag: '🇦🇹', code: 'AUT' },
-  JOR: { id: 'jor', name: 'Jordania', flag: '🇯🇴', code: 'JOR' },
+  ARG: { id: 'arg', name: 'Argentina', flag: '🇦🇷', code: 'ARG', flagCode: 'ar' },
+  ALG: { id: 'alg', name: 'Argelia', flag: '🇩🇿', code: 'ALG', flagCode: 'dz' },
+  AUT: { id: 'aut', name: 'Austria', flag: '🇦🇹', code: 'AUT', flagCode: 'at' },
+  JOR: { id: 'jor', name: 'Jordania', flag: '🇯🇴', code: 'JOR', flagCode: 'jo' },
 
   // Group K
-  POR: { id: 'por', name: 'Portugal', flag: '🇵🇹', code: 'POR' },
-  IPO_B: { id: 'ipo_b', name: 'Playoff Inter B', flag: '🏳️', code: 'IPO' }, // COD/JAM/NCL
-  UZB: { id: 'uzb', name: 'Uzbekistán', flag: '🇺🇿', code: 'UZB' },
-  COL: { id: 'col', name: 'Colombia', flag: '🇨🇴', code: 'COL' },
+  POR: { id: 'por', name: 'Portugal', flag: '🇵🇹', code: 'POR', flagCode: 'pt' },
+  IPO_B: { id: 'ipo_b', name: 'Playoff Inter B', flag: '🏳️', code: 'IPO', flagCode: 'un' }, // COD/JAM/NCL
+  UZB: { id: 'uzb', name: 'Uzbekistán', flag: '🇺🇿', code: 'UZB', flagCode: 'uz' },
+  COL: { id: 'col', name: 'Colombia', flag: '🇨🇴', code: 'COL', flagCode: 'co' },
 
   // Group L
-  ENG: { id: 'eng', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', code: 'ENG' },
-  CRO: { id: 'cro', name: 'Croacia', flag: '🇭🇷', code: 'CRO' },
-  GHA: { id: 'gha', name: 'Ghana', flag: '🇬🇭', code: 'GHA' },
-  PAN: { id: 'pan', name: 'Panamá', flag: '🇵🇦', code: 'PAN' },
+  ENG: { id: 'eng', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', code: 'ENG', flagCode: 'gb-eng' },
+  CRO: { id: 'cro', name: 'Croacia', flag: '🇭🇷', code: 'CRO', flagCode: 'hr' },
+  GHA: { id: 'gha', name: 'Ghana', flag: '🇬🇭', code: 'GHA', flagCode: 'gh' },
+  PAN: { id: 'pan', name: 'Panamá', flag: '🇵🇦', code: 'PAN', flagCode: 'pa' },
 };
 
 export const INITIAL_MATCHES: Match[] = [

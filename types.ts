@@ -1,8 +1,10 @@
+
 export type Team = {
   id: string;
   name: string;
   flag: string; // Emoji or image URL
   code: string; // ISO 3-letter code
+  flagCode: string; // ISO 2-letter code for FlagCDN
 };
 
 export enum MatchStage {
