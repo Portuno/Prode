@@ -18,8 +18,12 @@ const AIModal: React.FC<AIModalProps> = ({ match, isOpen, onClose, onApplyPredic
   if (!isOpen) return null;
 
   const handleAskAI = async () => {
-    if (!process.env.API_KEY) {
-        setError("API Key no configurada para la demo.");
+    // Safely access env
+    const env = (import.meta as any).env || {};
+    const apiKey = env.VITE_API_KEY || env.API_KEY || (typeof process !== 'undefined' ? process.env?.API_KEY : undefined);
+
+    if (!apiKey) {
+        setError("API Key no configurada (VITE_API_KEY).");
         return;
     }
 
@@ -27,7 +31,7 @@ const AIModal: React.FC<AIModalProps> = ({ match, isOpen, onClose, onApplyPredic
     setError(null);
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: apiKey });
       const prompt = `
         Analiza el partido de fútbol entre ${match.homeTeam.name} y ${match.awayTeam.name} para el Mundial 2026.
         Dame un pronóstico breve (máximo 40 palabras) divertido y un resultado exacto probable.
