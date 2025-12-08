@@ -50,6 +50,8 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserProde | null>(null);
   const [viewState, setViewState] = useState<ViewState>(ViewState.ONBOARDING); 
   const [session, setSession] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   
   // UI State
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -209,21 +211,33 @@ function App() {
       const activeUserId = forceUserId || session?.user?.id;
       
       if (activeUserId) {
+          setIsSaving(true);
+          setSaveError(false);
+          
           const totalPoints = getTotalScore(prode.predictions, matches);
-          // Omit updated_at if not in schema, include club if missing
+          
           const updates = {
               id: activeUserId,
               username: prode.userName,
               country: prode.countryCode,
-              club: prode.club,
+              club: prode.club || null, // Sanitize undefined to null for JSON/SQL compatibility
               email: session?.user?.email,
               total_score: totalPoints,
               prode_data: prode
-              // Removed updated_at to prevent schema errors if column missing
           };
 
           const { error } = await supabase.from('profiles').upsert(updates);
-          if (error) console.error('Error saving to Cloud:', JSON.stringify(error));
+          
+          if (error) {
+              console.error('Error saving to Cloud:', JSON.stringify(error));
+              setSaveError(true);
+              if (error.code === 'PGRST205') {
+                  alert('Error de Configuración: No se encontraron las tablas en Supabase. Por favor ejecuta el script SQL de instalación.');
+              }
+          }
+          
+          // Minimum spinner time for UX
+          setTimeout(() => setIsSaving(false), 800);
       }
   };
 
@@ -375,6 +389,19 @@ function App() {
                 </h1>
               </div>
                <div className="flex items-center gap-3">
+                 {/* Cloud Status Indicator */}
+                 {session && (
+                    <div className="text-white/80" title={saveError ? 'Error guardando' : 'Sincronizando'}>
+                        {isSaving ? (
+                             <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        ) : saveError ? (
+                             <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        ) : (
+                             <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        )}
+                    </div>
+                 )}
+
                  <div className="text-right">
                     <span className="text-[10px] text-white/80 uppercase font-bold tracking-widest block">Puntos</span>
                     <span className="text-2xl font-black text-[#FFD700] leading-none score-font drop-shadow-md">{totalPoints}</span>
