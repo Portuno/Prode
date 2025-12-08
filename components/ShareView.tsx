@@ -31,11 +31,19 @@ const ShareView: React.FC<ShareViewProps> = ({ prode, onBack }) => {
   return (
     <div className="pattern-net fixed inset-0 z-50 overflow-y-auto flex flex-col items-center justify-center min-h-[100dvh] text-center p-4 bg-[#004d40]">
       
-      <div className="mb-6 animate-fade-in-up">
-        <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-none drop-shadow-md">
-            ¡Prode <span className="text-[#FFD700]">Listo!</span>
-        </h2>
-        <p className="text-white/80 font-bold tracking-[0.2em] text-xs mt-4 uppercase bg-black/30 inline-block px-4 py-2 rounded-full backdrop-blur-sm">Tu jugada está guardada</p>
+      <div className="mb-6 animate-fade-in-up flex flex-col items-center">
+        <div className="flex items-center gap-3 mb-2">
+            <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-none drop-shadow-md">
+                ¡Prode <span className="text-[#FFD700]">Listo!</span>
+            </h2>
+            <div className="animate-bounce drop-shadow-lg text-[#FFD700]">
+                <svg className="w-12 h-12 md:w-16 md:h-16" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 3L5 7C5 9.20914 6.79086 11 9 11H15C17.2091 11 19 9.20914 19 7V3H5ZM3 3C3 1.89543 3.89543 1 5 1H19C20.1046 1 21 1.89543 21 3V7C21 10.3137 18.3137 13 15 13H14.8996C14.3934 14.7396 12.827 16 11 16H10C8.89543 16 8 15.1046 8 14H9C9.55228 14 10 13.5523 10 13H9C5.68629 13 3 10.3137 3 7V3ZM12 18C12.5523 18 13 18.4477 13 19V21H16C16.5523 21 17 21.4477 17 22H7C7 21.4477 7.44772 21 8 21H11V19C11 18.4477 11.4477 18 12 18Z" />
+                    <path d="M7 2H17V0H7V2Z" />
+                </svg>
+            </div>
+        </div>
+        <p className="text-white/80 font-bold tracking-[0.2em] text-xs mt-2 uppercase bg-black/30 inline-block px-4 py-2 rounded-full backdrop-blur-sm">Tu jugada está guardada</p>
       </div>
 
       {/* Ticket Card */}
@@ -100,3 +108,4 @@ const ShareView: React.FC<ShareViewProps> = ({ prode, onBack }) => {
 };
 
 export default ShareView;
+    

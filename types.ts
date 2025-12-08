@@ -69,3 +69,22 @@ export type GroupStats = {
   gf: number; // Goals For
   group: string;
 };
+
+// --- NEW SOCIAL TYPES ---
+
+export type LeagueMember = {
+  userId: string;
+  userName: string;
+  score: number;
+  rank: number;
+  isCurrentUser?: boolean;
+};
+
+export type League = {
+  id: string;
+  name: string;
+  code: string;
+  creatorId: string;
+  members: LeagueMember[];
+  memberCount: number;
+};
